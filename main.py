@@ -10,7 +10,7 @@ import asyncio
 
 
 bot = commands.Bot(command_prefix='$')
-game = discord.Game("Nykterstein ORZ")
+
 
 class ContestDetails:
     def __init__(self):
@@ -201,8 +201,11 @@ async def mail(ctx, URL):
         await ctx.send(embed=embedVar)
     
     
-            
+@bot.event
+async def on_ready():
+    await bot.change_presence(activity=discord.Game("Nykterstein ORZ"))
 
+    
 
 @bot.command()
 async def working(ctx):
