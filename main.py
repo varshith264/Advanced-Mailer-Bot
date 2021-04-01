@@ -7,6 +7,8 @@ from lxml import html
 from bs4 import BeautifulSoup
 import requests
 import asyncio
+from email.mime.multipart import MIMEMultipart
+from email.message import EmailMessage
 
 
 bot = commands.Bot(command_prefix='$')
@@ -22,7 +24,6 @@ class ContestDetails:
         self.EndTime = '?'
         self.Duration = '?'
         self.Description='?'
-        self.signature = '''<br><br><table width="351" cellspacing="0" cellpadding="0" border="0"> <tr> <td style="vertical-align: top; text-align:left;color:#000000;font-size:12px;font-family:helvetica, arial;; text-align:left"> <span><span style="margin-right:5px;color:#000000;font-size:15px;font-family:helvetica, arial">Happy Coding;</span> <br><span style="margin-right:5px;color:#000000;font-size:12px;font-family:helvetica, arial">CPHUB | NITC Codechef Campus Chapter</span></span> <br><br> <table cellpadding="0" cellpadding="0" border="0"><tr><td style="padding-right:5px"><a href="https://facebook.com/cphub.nitc/" style="display: inline-block;"><img width="40" height="40" src="https://s1g.s3.amazonaws.com/23f7b48395f8c4e25e64a2c22e9ae190.png" alt="Facebook" style="border:none;"></a></td><td style="padding-right:5px"><a href="https://instagram.com/cphub.nitc/" style="display: inline-block;"><img width="40" height="40" src="https://s1g.s3.amazonaws.com/4c616177ca37bea6338e6964ca830de5.png" alt="Instagram" style="border:none;"></a></td><td style="padding-right:5px"><a href="https://discord.gg/dpHV4sm6XF" style="display: inline-block;"><img width="40" height="40" src="https://s1g.s3.amazonaws.com/ba48639bd505cee2cc8b43ecb698f903.png" alt="Discord" style="border:none;"></a></td><td style="padding-right:5px"><a href="https://cphub-nitc.github.io/chapter/index.html" style="display: inline-block;"><img width="40" height="40" src="https://s1g.s3.amazonaws.com/8ab12118c0ee1056ed787deb1a208149.png" alt="General (Enter full link)" style="border:none;"></a></td></tr></table> </td> </tr> </table> <table width="351" cellspacing="0" cellpadding="0" border="0" style="margin-top:10px"> <tr> <td style="text-align:left;color:#aaaaaa;font-size:10px;font-family:helvetica, arial;"><p>Note: This mail is sent using Mailer Bot</p></td> </tr> </table> '''
 
 
     def print_details(self):
@@ -33,7 +34,6 @@ class ContestDetails:
         print('StartTime' + ' ' + self.StartTime)
         print('EndTime' + ' ' + self.EndTime)
         print('Duration' + ' ' + self.Duration)
-        print(self.Description)
         # print(self.signature)
 
 def time_diff(s1, s2):
@@ -76,17 +76,54 @@ def Beginner(sample, URL):
     # return message
 
 
-def Compose_Mail(Contest):
-    receiver = 'chandurivarshith264@gmail.com'
+def Compose_Mail(Contest, to,cc,bcc):
+    # receiver = 'bec18@nitc.ac.in'
+    receiver = to + cc + bcc
 
     message = 'Subject: {}\n\n{}'.format(
         'Invitation to ' + Contest.Name, Contest.Description)
+
+    msg = EmailMessage()
+    msg.set_content(Contest.Description)
+    msg['Subject'] = 'Invitation to ' + Contest.Name
+    msg['From'] = MY_GMAIL
+    msg['To'] = to
+    msg['Cc'] = cc
+    msg['Bcc'] = bcc
+
+    # s = smtplib.SMTP('localhost')
+
+
+    # s.send_message(msg)
+    # s.quit()
 
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.starttls()
 
     server.login(MY_GMAIL, GMAIL_PASSWORD)
-    server.sendmail(MY_GMAIL, receiver, message)
+    server.send_message(msg)
+    # server.sendmail(MY_GMAIL, receiver, message)
+
+
+def details(to, cc, bcc):
+    text = 'to: '
+    for i in to:
+        text += str(i) +" "
+    text += '\ncc: '
+    for i in cc:
+        text += str(i)+" "
+    if len(cc) == 0:
+        text += 'none'
+    text += '\nBcc: '
+    for i in bcc:
+        text += str(i)+" "
+    if len(bcc) == 0:
+        text += 'none'
+    text+='\n'
+    
+    return text
+    
+    
 
 
 
@@ -173,22 +210,87 @@ async def mail(ctx, URL):
 
     
     # SampleContest.print_details()
+    CC_address = []
+    TO_address = []
+    BCC_address = []
 
-    embedVar = discord.Embed(title="Mail Preview", description="", color= 0x00ff00)
+    embedVar = discord.Embed(
+        title="Enter 'TO' receiver address", description="", color=0x00ff00)
+    await ctx.send(embed=embedVar)
+
+    try:
+        message = await bot.wait_for('message', timeout=60, check=lambda message: message.author == ctx.author)
+        TO_address = [names for names in (message.content).split(" ")]
+    except asyncio.TimeoutError:
+        embedVar = discord.Embed(
+            title="timeup you did not respond, please try again if you wish to", description="", color=0x00ff00)
+        await ctx.send(embed=embedVar)
+        return
+
+
+    embedVar = discord.Embed(title="Enter CC's receiver address, '0' to leave it empty", description="", color= 0x00ff00)
+    await ctx.send(embed=embedVar)
+
+    try:
+        message = await bot.wait_for('message', timeout=60, check=lambda message: message.author == ctx.author)
+        if message.content != '0':
+            CC_address=[names for names in (message.content).split(" ")]
+        else:
+            CC_address.clear()
+    except asyncio.TimeoutError:
+        embedVar = discord.Embed(
+            title="timeup you did not respond, please try again if you wish to", description="", color=0x00ff00)
+        await ctx.send(embed=embedVar)
+        return
+
+    embedVar = discord.Embed(title="Enter BCC's receiver address, '0' to leave it empty", description="", color=0x00ff00)
+    await ctx.send(embed=embedVar)
+
+    try:
+        message = await bot.wait_for('message', timeout=60, check=lambda message: message.author == ctx.author)
+        if message.content != '0':
+            BCC_address = [names for names in message.content.split(" ")]
+        else:
+            BCC_address.clear()
+    except asyncio.TimeoutError:
+        embedVar = discord.Embed(
+            title="timeup you did not respond, please try again if you wish to", description="", color=0x00ff00)
+        await ctx.send(embed=embedVar)
+        return
+
+    embedVar = discord.Embed(
+        title="Enter your name and roll no saperated by space", description="", color=0x00ff00)
+    await ctx.send(embed=embedVar)
+
+    try:
+        message = await bot.wait_for('message', timeout=60, check=lambda message: message.author == ctx.author)
+        names = message.content.split(" ")
+        if len(names) == 2:
+            SampleContest.Description+="\nRegards\n"+names[0]+"\n"+names[1]
+    except asyncio.TimeoutError:
+        embedVar = discord.Embed(
+            title="timeup you did not respond, please try again if you wish to", description="", color=0x00ff00)
+        await ctx.send(embed=embedVar)
+        return
+
+    SampleContest.Description+="\n~CPHub NITC"
+
+    
+    embedVar = discord.Embed(title="Mail Preview", description="", color=0x00ff00)
+    embedVar.add_field(name="Preview",
+                       value=details(TO_address,CC_address,BCC_address), inline=False)
     embedVar.add_field(name='Invitation to ' + SampleContest.Name,value=SampleContest.Description, inline=False)
     await ctx.send(embed=embedVar)
 
     embedVar = discord.Embed(title="Confirm mail",
-                             description="Enter 1 if you want to send mail otherwise enter 0 within 45 seconds", color=0x00ff00)
+                             description="Enter 1 if you want to send mail otherwise enter 0 within 60 seconds", color=0x00ff00)
     await ctx.send(embed=embedVar)
-
-    def check(m):
-        return m.channel == message.channel and m.author != client.user
+    
 
     try:
         message = await bot.wait_for('message', timeout=60, check=lambda message: message.author == ctx.author)
         if message.content == '1':
-            Compose_Mail(SampleContest)
+            Compose_Mail(SampleContest,TO_address ,CC_address,BCC_address )
             embedVar = discord.Embed(
                 title="Mail sent successfully", description="", color=0x00ff00)
             await ctx.send(embed=embedVar)
@@ -203,18 +305,22 @@ async def mail(ctx, URL):
     
 @bot.event
 async def on_ready():
-    await bot.change_presence(activity=discord.Game("Nykterstein ORZ"))
-
-    
+    await bot.change_presence(activity=discord.Game("Chess, because why not?"))
+    # await bot.get_channel(821633183820939318).send("I'm online !")
 
 @bot.command()
 async def working(ctx):
     await ctx.send("Yes I'm working")
 
 
+# @bot.event
+# async def on_disconnect():
+#     await bot.get_channel(821633183820939318).send('bye!')
+
 
 
 bot.run(Token)
+
 
 
 
