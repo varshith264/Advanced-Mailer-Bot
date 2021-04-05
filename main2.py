@@ -209,16 +209,16 @@ async def mail(ctx, URL):
         SampleContest.StartTime = info[1][:5] + ' PM'
 
     
-    # SampleContest.print_details()
-    # CC_address = ['smruthi@codechef.com', 'lijia@nitc.ac.in']
-    # TO_address = ['students@nitc.ac.in']
-    # BCC_address = []
-
-
-
-    CC_address = ['raghuram_b180061ec@nitc.ac.in']
-    TO_address = ['varshith_b180514ec@nitc.ac.in']
+#     SampleContest.print_details()
+    CC_address = ['smruthi@codechef.com', 'lijia@nitc.ac.in']
+    TO_address = ['students@nitc.ac.in']
     BCC_address = []
+
+
+
+#     CC_address = ['raghuram_b180061ec@nitc.ac.in']
+#     TO_address = ['varshith_b180514ec@nitc.ac.in']
+#     BCC_address = []
 
     embedVar = discord.Embed(
         title="Enter your name and roll no saperated by space", description="", color=0x00ff00)
