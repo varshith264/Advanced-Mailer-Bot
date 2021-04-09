@@ -269,6 +269,7 @@ async def mail(ctx, URL):
         embedVar = discord.Embed(
             title="timeup you did not respond, please try again if you wish to", description="", color=0x00ff00)
         await ctx.send(embed=embedVar)
+        return
 
 
 
